@@ -10,6 +10,8 @@ pip install .
 
 ## Usage
 ```Python
+from diff_gaussian_voxelization import GaussianVoxelizationSettings, GaussianVoxelizer
+
 voxel_settings = GaussianVoxelizationSettings(
     voxel_physical=voxel_physical,      # the physical size of a voxel. e.g. torch.tensor([0.001, 0.001, 0.001])
     volume_pixel=volume_pixel,          # the pixel size of the volume. e.g. torch.tensor([128, 128, 128])
