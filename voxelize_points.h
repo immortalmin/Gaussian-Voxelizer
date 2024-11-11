@@ -7,7 +7,7 @@ std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torc
 VoxelizeGaussiansCUDA(
     const torch::Tensor& voxel_physical_size,
     const torch::Tensor& volume_pixel_size,
-    const torch::Tensor& volume_physical_size,
+    const torch::Tensor& volume_center_pos,
 	const torch::Tensor& means3D,
     const torch::Tensor& densities,
     const torch::Tensor& scales,
@@ -19,7 +19,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
 VoxelizeGaussiansBackwardCUDA( 
     const torch::Tensor& voxel_physical_size,
     const torch::Tensor& volume_pixel_size,
-    const torch::Tensor& volume_physical_size,
+    const torch::Tensor& volume_center_pos,
     const torch::Tensor& means3D,
     const torch::Tensor& densities,
     const torch::Tensor& radii,

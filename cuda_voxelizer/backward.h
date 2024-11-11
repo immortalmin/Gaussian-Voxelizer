@@ -18,6 +18,7 @@ namespace BACKWARD
         const float3 voxel_physical,
         const float3 volume_pixel,
         const float3 volume_physical,
+        const float3 volume_center,
         const float* means3D,
         const float* densities,
         const float* cov3Ds_inv,
