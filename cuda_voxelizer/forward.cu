@@ -67,6 +67,7 @@ voxelizeCUDA(
     const float3 __restrict__ voxel_physical,
     const float3 __restrict__ volume_pixel,
     const float3 __restrict__ volume_physical,
+    const float3 __restrict__ volume_center,
 	const float* __restrict__ means3D,
 	const float* __restrict__ densities,
 	const float* __restrict__ cov3Ds_inv,
@@ -87,7 +88,7 @@ voxelizeCUDA(
     // the index of the voxel in the volume.
     int globalIdx = idx_x * volume_pixel.y * volume_pixel.z + idx_y * volume_pixel.z + idx_z;
 
-    float3 start = (voxel_physical - volume_physical) / 2.0;
+    float3 start = (voxel_physical - volume_physical) / 2.0 + volume_center;
     // x is the physical position of the center of the voxel.
     float3 x = start + idx_f * voxel_physical;
 
@@ -135,6 +136,7 @@ __global__ void preprocessCUDA(
     const dim3 grid,
     const float3 voxel_physical,
     const float3 volume_offset,
+    const float3 volume_center,
     uint32_t* blocks_touched
 ){
     auto idx = cg::this_grid().thread_rank();
@@ -152,7 +154,7 @@ __global__ void preprocessCUDA(
 
     const float3 point = {means3D[idx*3], means3D[idx*3+1], means3D[idx*3+2]};
     uint3 rect_min, rect_max;
-    getRect(point, radius, rect_min, rect_max, grid, voxel_physical, volume_offset);
+    getRect(point, radius, rect_min, rect_max, grid, voxel_physical, volume_offset, volume_center);
     if ((rect_max.x - rect_min.x) * (rect_max.y - rect_min.y) * (rect_max.z - rect_min.z) == 0) return;
 
     radii[idx] = radius;
@@ -167,6 +169,7 @@ void FORWARD::voxelize(
     const float3 voxel_physical,
     const float3 volume_pixel,
     const float3 volume_physical,
+    const float3 volume_center,
 	const float* means3D,
     const float* densities,
     const float* cov3Ds_inv,
@@ -178,6 +181,7 @@ void FORWARD::voxelize(
         voxel_physical,
         volume_pixel,
         volume_physical,
+        volume_center,
 		means3D,
 		densities,
         cov3Ds_inv,
@@ -197,6 +201,7 @@ void FORWARD::preprocess(
     const dim3 grid,
     const float3 voxel_physical,
     const float3 volume_offset,
+    const float3 volume_center,
     uint32_t* blocks_touched
 ) {
     preprocessCUDA<<<(P + 255) / 256, 256>>>(
@@ -211,6 +216,7 @@ void FORWARD::preprocess(
         grid,
         voxel_physical,
         volume_offset,
+        volume_center,
         blocks_touched
     );
 }

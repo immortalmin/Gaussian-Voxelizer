@@ -31,7 +31,7 @@ class _VoxelizeGaussians(torch.autograd.Function):
         args = (
             voxel_settings.voxel_physical,
             voxel_settings.volume_pixel,
-            voxel_settings.volume_physical,
+            voxel_settings.volume_center,
             means3D,
             densities,
             scales,
@@ -54,7 +54,7 @@ class _VoxelizeGaussians(torch.autograd.Function):
         args = (
             voxel_settings.voxel_physical,
             voxel_settings.volume_pixel,
-            voxel_settings.volume_physical,
+            voxel_settings.volume_center,
             means3D,
             densities,
             radii,
@@ -82,7 +82,7 @@ class _VoxelizeGaussians(torch.autograd.Function):
 class GaussianVoxelizationSettings(NamedTuple):
     voxel_physical: torch.Tensor
     volume_pixel: torch.Tensor
-    volume_physical: torch.Tensor
+    volume_center: torch.Tensor
     debug: bool
 
 class GaussianVoxelizer(nn.Module):

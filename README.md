@@ -4,7 +4,7 @@ What r2_gaussian is doing is applying [3D-GS](https://github.com/graphdeco-inria
 
 There are some differences between our voxelizer and theirs:
 1. They first convert the 3D Gaussians to a voxel space, and then take the volume. And we directly extract the volume from the world space.
-2. We currently do not have the flexibility of r2_gaussian, which can extract volumes from any position. We will make improvements to this in the future.
+2. We currently do not have the flexibility of r2_gaussian, which can extract volumes from any position. We will make improvements to this in the future. (Finished ✅)
 3. But I think our code executes faster, and we will add comparative experiments in the future.
 
 The overall structure of the project and some codes are referenced from 3D-GS.

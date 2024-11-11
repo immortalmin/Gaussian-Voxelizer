@@ -20,6 +20,7 @@ namespace FORWARD{
         const dim3 grid,
         const float3 voxel_physical,
         const float3 volume_offset,
+        const float3 volume_center,
         uint32_t* blocks_touched
     );
 
@@ -31,6 +32,7 @@ namespace FORWARD{
         const float3 voxel_physical,
         const float3 volume_pixel,
         const float3 volume_physical,
+        const float3 volume_center,
 	    const float* means3D,
         const float* densities,
         const float* cov3Ds_inv,

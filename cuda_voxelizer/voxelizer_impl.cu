@@ -48,7 +48,8 @@ __global__ void duplicateWithKeys(
 	float* radii,
 	dim3 grid,
     const float3 voxel_physical,
-    const float3 volume_offset)
+    const float3 volume_offset,
+    const float3 volume_center)
 {
 	auto idx = cg::this_grid().thread_rank();
 	if (idx >= P)
@@ -61,7 +62,7 @@ __global__ void duplicateWithKeys(
 		uint32_t off = (idx == 0) ? 0 : offsets[idx - 1];
 		uint3 rect_min, rect_max;
         float3 point_xyz = {points_xyz[3 * idx], points_xyz[3 * idx + 1], points_xyz[3 * idx + 2]};
-		getRect(point_xyz, radii[idx], rect_min, rect_max, grid, voxel_physical, volume_offset);
+		getRect(point_xyz, radii[idx], rect_min, rect_max, grid, voxel_physical, volume_offset, volume_center);
 
 		// For each tile that the bounding rect overlaps, emit a 
 		// key/value pair. The key is |  tile ID  |      depth      |,
@@ -156,7 +157,7 @@ int CudaVoxelizer::Voxelizer::forward(
     int P,
     const float* voxel_physical_size,
     const float* volume_pixel_size,
-    const float* volume_physical_size,
+    const float* volume_center_pos,
     const float* means3D,
     const float* densities,
     const float* scales,
@@ -168,7 +169,8 @@ int CudaVoxelizer::Voxelizer::forward(
     // FIXME: 应该是float3还是float3*，因为后面要频繁地当作参数，可能使用引用或者指针更高效
     float3 voxel_physical = {voxel_physical_size[0], voxel_physical_size[1], voxel_physical_size[2]};
     float3 volume_pixel = {volume_pixel_size[0], volume_pixel_size[1], volume_pixel_size[2]};
-    float3 volume_physical = {volume_physical_size[0], volume_physical_size[1], volume_physical_size[2]};
+    float3 volume_physical = voxel_physical * volume_pixel;
+    float3 volume_center = {volume_center_pos[0], volume_center_pos[1], volume_center_pos[2]};
     float3 volume_offset = volume_physical / make_float3(2.0, 2.0, 2.0);
 
     dim3 block_grid((volume_pixel.x + BLOCK_X - 1) / BLOCK_X, (volume_pixel.y + BLOCK_Y - 1) / BLOCK_Y, (volume_pixel.z + BLOCK_Z - 1) / BLOCK_Z);
@@ -200,6 +202,7 @@ int CudaVoxelizer::Voxelizer::forward(
         block_grid,
         voxel_physical,
         volume_offset,
+        volume_center,
         geomState.blocks_touched
     ), debug)
     
@@ -222,7 +225,8 @@ int CudaVoxelizer::Voxelizer::forward(
 		radii,
 		block_grid,
         voxel_physical,
-        volume_offset
+        volume_offset,
+        volume_center
     );
     CHECK_CUDA(, debug)
     
@@ -254,6 +258,7 @@ int CudaVoxelizer::Voxelizer::forward(
         voxel_physical,
         volume_pixel,
         volume_physical,
+        volume_center,
         means3D,
         densities,
         geomState.cov3Ds_inv,
@@ -267,7 +272,7 @@ void CudaVoxelizer::Voxelizer::backward(
     const int P, int R,
     const float* voxel_physical_size,
     const float* volume_pixel_size,
-    const float* volume_physical_size,
+    const float* volume_center_pos,
     const float* means3D,
     const float* densities,
     const float* scales,
@@ -287,8 +292,8 @@ void CudaVoxelizer::Voxelizer::backward(
 ) {
     float3 voxel_physical = {voxel_physical_size[0], voxel_physical_size[1], voxel_physical_size[2]};
     float3 volume_pixel = {volume_pixel_size[0], volume_pixel_size[1], volume_pixel_size[2]};
-    float3 volume_physical = {volume_physical_size[0], volume_physical_size[1], volume_physical_size[2]};
-    float3 volume_offset = volume_physical / make_float3(2.0, 2.0, 2.0);
+    float3 volume_physical = voxel_physical * volume_pixel;
+    float3 volume_center = {volume_center_pos[0], volume_center_pos[1], volume_center_pos[2]};
 
     dim3 block_grid((volume_pixel.x + BLOCK_X - 1) / BLOCK_X, (volume_pixel.y + BLOCK_Y - 1) / BLOCK_Y, (volume_pixel.z + BLOCK_Z - 1) / BLOCK_Z);
     dim3 block(BLOCK_X, BLOCK_Y, BLOCK_Z);
@@ -310,6 +315,7 @@ void CudaVoxelizer::Voxelizer::backward(
         voxel_physical,
         volume_pixel,
         volume_physical,
+        volume_center,
         means3D,
         densities,
         geomState.cov3Ds_inv,
